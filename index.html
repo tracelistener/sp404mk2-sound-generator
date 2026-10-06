@@ -1,0 +1,999 @@
+<title>Type 15+ Wave Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
+<style>
+/* Layout: the instrument (OLED, controls, 4x4 pads) is one faceplate on top; the candidate types sit below as pad-coloured cards grouped by family; notes on SP behaviour close the page. */
+:root {
+  color-scheme: dark;
+  --ground: #141517;
+  --plate: #1e1f22;
+  --rule: #34363b;
+  --legend: #ebe6da;
+  --legend-dim: #a39e93;
+  --rubber: #2b2d32;
+  --oled-off: #040506;
+  --fam-fm: #f2a541;
+  --fam-pd: #ec6fa8;
+  --fam-shape: #4cc6d8;
+  --fam-add: #b5d66a;
+  --fam-form: #b393f7;
+  --fam-dig: #f0dc63;
+  --fam-stock: #b8bbc3;
+  --accent: var(--fam-pd);
+  --f-display: "Silkscreen", "Courier New", monospace;
+  --f-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+html { background: var(--ground); }
+body {
+  background: var(--ground);
+  color: var(--legend);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 36px);
+  padding-block: 32px 72px;
+  display: grid;
+  gap: 44px;
+}
+:focus-visible { outline: 2px solid var(--legend); outline-offset: 2px; }
+
+/* Masthead */
+.masthead { display: grid; gap: 10px; }
+.eyebrow {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--legend-dim);
+}
+h1 {
+  margin: 0;
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.lede { margin: 0; max-width: 64ch; color: var(--legend-dim); }
+
+/* Faceplate */
+.faceplate {
+  background: linear-gradient(180deg, #24262a 0%, var(--plate) 45%);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  padding: clamp(16px, 3vw, 28px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 0.95fr);
+  gap: clamp(18px, 3vw, 32px);
+  align-items: start;
+}
+.legend {
+  font-stretch: 75%;
+  font-weight: 650;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--legend-dim);
+}
+.screen-col, .controls, .pads-col { display: grid; gap: 14px; }
+.bezel {
+  background: #0a0b0d;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+#oled {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  background: var(--oled-off);
+  border-radius: 2px;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+.stepper { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.key, .toggle, select {
+  font-family: var(--f-body);
+  font-stretch: 75%;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--legend);
+  background: var(--rubber);
+  border: 1px solid #101113;
+  border-radius: 7px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 0 #0b0c0e;
+}
+.key, .toggle {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.key:active, .toggle:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 0 #0b0c0e; }
+.toggle::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3b3d43;
+}
+.toggle[aria-pressed="true"]::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+select { padding: 7px 8px; font-family: var(--f-mono); font-stretch: 100%; letter-spacing: 0.02em; text-transform: none; font-weight: 600; }
+
+.ctrl { display: grid; gap: 6px; }
+.ctrl-row { display: flex; align-items: center; gap: 12px; }
+.ctrl-row input[type="range"] { flex: 1; min-width: 0; }
+.ctrl-row.wrap-row { flex-wrap: wrap; gap: 10px 12px; }
+output {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  min-width: 4ch;
+  text-align: right;
+  color: var(--legend);
+}
+.oct { display: inline-flex; align-items: center; gap: 6px; }
+.oct .key { padding: 6px 10px; }
+.oct output { min-width: 2ch; text-align: center; }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 28px;
+  background: transparent;
+  cursor: pointer;
+  --fill: 50%;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--rule) var(--fill));
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f4f0e7, #bdb8ad 72%);
+  border: 1px solid #0c0d0f;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--rule); }
+input[type="range"]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--accent); }
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #dcd7cc;
+  border: 1px solid #0c0d0f;
+}
+input[type="range"]:focus-visible { outline: 2px solid var(--legend); outline-offset: 2px; border-radius: 4px; }
+
+.pads {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  touch-action: none;
+}
+.pad {
+  aspect-ratio: 1;
+  max-width: 100%;
+  border-radius: 9px;
+  background: var(--rubber);
+  border: 1px solid #101113;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--legend-dim);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  display: grid;
+  align-items: end;
+  justify-items: start;
+  padding: 7px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  transition: background-color 0.07s, box-shadow 0.07s, color 0.07s;
+}
+.pad .k { position: absolute; top: 6px; right: 7px; opacity: 0.55; text-transform: uppercase; }
+.pad.on {
+  background: color-mix(in srgb, var(--accent) 42%, var(--rubber));
+  color: #0f1012;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.hint { margin: 0; font-size: 13px; color: var(--legend-dim); }
+
+/* Type bank */
+.bank { display: grid; gap: 30px; }
+.bank-head { display: grid; gap: 8px; max-width: 74ch; }
+h2 {
+  margin: 0;
+  font-stretch: 112%;
+  font-weight: 750;
+  font-size: 28px;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.bank-head p { margin: 0; color: var(--legend-dim); }
+.keyline { font-family: var(--f-mono); font-size: 12.5px; color: var(--legend-dim); }
+.family { display: grid; gap: 12px; }
+.family h3 {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-stretch: 75%;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fam);
+  box-shadow: 0 0 10px var(--fam);
+  align-self: center;
+}
+.family h3 .sub {
+  font-stretch: 100%;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--legend-dim);
+  font-size: 14px;
+}
+.cards { display: flex; flex-wrap: wrap; gap: 12px; }
+.card {
+  flex: 1 1 230px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--plate);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.card:hover { border-color: color-mix(in srgb, var(--fam) 50%, var(--rule)); }
+.card[aria-pressed="true"] {
+  border-color: var(--fam);
+  box-shadow: 0 0 0 1px var(--fam), 0 0 26px color-mix(in srgb, var(--fam) 22%, transparent);
+}
+.card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sp-name { font-family: var(--f-display); font-size: 16px; letter-spacing: 0.02em; color: var(--legend); white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.chip {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  color: var(--legend-dim);
+  white-space: nowrap;
+}
+.chip.pick { border-color: var(--fam); color: var(--fam); }
+.thumb { display: block; width: 100%; height: 48px; background: var(--ground); border-radius: 6px; }
+.desc { display: block; font-size: 14px; line-height: 1.45; }
+.duty { display: block; font-size: 13px; color: var(--legend-dim); }
+.duty b {
+  font-stretch: 75%;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fam);
+  margin-right: 6px;
+}
+.recipe { display: block; font-family: var(--f-mono); font-size: 12px; color: var(--legend-dim); overflow-wrap: anywhere; }
+
+/* Notes */
+.notes { display: grid; gap: 14px; max-width: 74ch; }
+.notes ul { margin: 0; padding-left: 1.1em; display: grid; gap: 9px; color: var(--legend-dim); }
+.notes li strong { color: var(--legend); font-weight: 650; }
+.foot { margin: 0; font-size: 13px; color: var(--legend-dim); max-width: 74ch; border-top: 1px solid var(--rule); padding-top: 18px; }
+
+@media (max-width: 980px) {
+  .faceplate { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pads-col { grid-column: 1 / -1; max-width: 460px; }
+}
+@media (max-width: 640px) {
+  .faceplate { grid-template-columns: minmax(0, 1fr); }
+  .pads-col { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pad, .card { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">SP-404MKII · Sound Generator · types after Noise2</p>
+    <h1>Type 15+ Wave Lab</h1>
+    <p class="lede">Seventeen candidate waveforms for the Sound Generator. Each one needs only the cycle position and the Duty knob, so it could slot in after the 15 stock types without new memory. Play them here before any firmware gets written.</p>
+  </header>
+
+  <section class="faceplate" id="faceplate" aria-label="Instrument">
+    <div class="screen-col">
+      <div class="bezel"><canvas id="oled" width="128" height="64" role="img" aria-label="Screen"></canvas></div>
+      <div class="stepper">
+        <button class="key" id="prevType" type="button" aria-label="Previous type">&#9664; Prev</button>
+        <span class="legend">CTRL 1 · Type</span>
+        <button class="key" id="nextType" type="button" aria-label="Next type">Next &#9654;</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="ctrl">
+        <label class="legend" for="duty">Shift + CTRL 2 · Duty cycle</label>
+        <div class="ctrl-row">
+          <input type="range" id="duty" min="0" max="100" value="50">
+          <output id="dutyOut" for="duty">50%</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <label class="legend" for="level">CTRL 3 · Level</label>
+        <div class="ctrl-row">
+          <input type="range" id="level" min="0" max="127" value="90">
+          <output id="levelOut" for="level">90</output>
+        </div>
+      </div>
+      <div class="ctrl">
+        <span class="legend">Pads</span>
+        <div class="ctrl-row wrap-row">
+          <select id="scale" aria-label="Scale">
+            <option value="pentam" selected>Penta m</option>
+            <option value="minor">Minor</option>
+            <option value="chrom">Chrom</option>
+          </select>
+          <span class="oct">
+            <span class="legend">Oct</span>
+            <button class="key" id="octDown" type="button" aria-label="Octave down">&minus;</button>
+            <output id="octOut">2</output>
+            <button class="key" id="octUp" type="button" aria-label="Octave up">+</button>
+          </span>
+        </div>
+      </div>
+      <div class="ctrl-row wrap-row">
+        <button class="toggle" id="sweep" type="button" aria-pressed="false">Sweep duty</button>
+        <button class="toggle" id="hold" type="button" aria-pressed="false">Hold</button>
+      </div>
+    </div>
+
+    <div class="pads-col">
+      <div class="pads" id="pads" role="group" aria-label="Pads"></div>
+      <p class="hint">Press a pad, or use keys 1&ndash;4, Q&ndash;R, A&ndash;F, Z&ndash;V. Arrow keys change type. Sound starts on your first press.</p>
+    </div>
+  </section>
+
+  <section class="bank" aria-labelledby="bankTitle">
+    <div class="bank-head">
+      <h2 id="bankTitle">Candidate types</h2>
+      <p>Click a card to load it into the screen. Six are marked First batch: the widest spread of new sounds for a first build.</p>
+      <p class="keyline">p = cycle position 0&ndash;1 &nbsp;·&nbsp; &theta; = 2&pi;p &nbsp;·&nbsp; d = Duty 0&ndash;1 &nbsp;·&nbsp; r = random number drawn once per cycle</p>
+    </div>
+    <div id="families" class="bank"></div>
+  </section>
+
+  <section class="notes" aria-labelledby="notesTitle">
+    <h2 id="notesTitle">How these would behave on the SP</h2>
+    <ul>
+      <li><strong>One voice.</strong> The stock generator is mono, and these stay mono.</li>
+      <li><strong>Tone only moves by hand.</strong> Nothing modulates Duty, so sweeps are performed. Catch one live with skip-back (MARK), or export a still tone with REC and shape it with the SP's own envelope and effects.</li>
+      <li><strong>Pitch comes for free.</strong> Every type reads the same cycle position the stock types use. LP Saw, LP Sqr, Organ and Vowel also read the note, to skip harmonics above Nyquist or keep formants fixed in Hz.</li>
+      <li><strong>Loudness is matched on this page</strong> so you compare tone, not level. On the SP each type would get a fixed gain.</li>
+      <li><strong>Cost.</strong> Cheap types take one to three sine calls per sample. Medium types sum up to 64 harmonics. Both should fit, but the medium ones are the first to test for dropouts.</li>
+      <li><strong>Grit still needs no new memory.</strong> It reads the random number the stock code already draws at the start of every cycle.</li>
+    </ul>
+    <p class="foot">Based on a trace of firmware 5.52: the generator is a one-voice oscillator in the ARM app, and new types would hook in where types above 14 currently fall silent. The math on this page runs in your browser and nothing here talks to the SP.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const TAU = Math.PI * 2;
+  const frac = (x) => x - Math.floor(x);
+
+  function hash11(n) {
+    let x = n | 0;
+    x = Math.imul(x ^ (x >>> 16), 0x45d9f3b);
+    x = Math.imul(x ^ (x >>> 16), 0x45d9f3b);
+    x = x ^ (x >>> 16);
+    return ((x >>> 0) / 4294967295) * 2 - 1;
+  }
+
+  // Additive saw/square through a resonant low-pass, skipping harmonics above Nyquist.
+  function lpBank(p, d, dt, oddOnly) {
+    const th = TAU * p;
+    const s1 = Math.sin(th);
+    const twoC = 2 * Math.cos(th);
+    const nmax = Math.max(1, Math.min(64, Math.floor(0.45 / dt)));
+    const nc = Math.pow(2, 0.2 + 5.2 * d);
+    const q = 1.4;
+    let sPrev = 0, sCur = s1, y = 0;
+    for (let n = 1; n <= nmax; n++) {
+      if (!oddOnly || (n & 1)) {
+        const x = n / nc;
+        const a = 1 - x * x;
+        const b = x / q;
+        y += sCur / (n * (a * a + b * b));
+      }
+      const sNext = twoC * sCur - sPrev;
+      sPrev = sCur;
+      sCur = sNext;
+    }
+    return y;
+  }
+
+  // Drawbars 16', 5 1/3', 8', 4', 2 2/3', 2', 1 3/5', 1 1/3', 1' as harmonics of the 16' bar.
+  const ORG_H = [1, 3, 2, 4, 6, 8, 10, 12, 16];
+  const ORG_REGS = ["008000000", "886000000", "888000000", "888800000", "888888888"].map((s) =>
+    [...s].map((ch) => { const n = +ch; return n ? Math.pow(10, (-3 * (8 - n)) / 20) : 0; })
+  );
+
+  // Formants (Hz) for A E I O U, with amplitudes and bandwidths.
+  const VOW = [[730, 1090, 2440], [530, 1840, 2480], [270, 2290, 3010], [570, 840, 2410], [300, 870, 2240]];
+  const VAMP = [1.0, 0.55, 0.3];
+  const VBW = [80, 90, 120];
+
+  // A 32-frame stored table: a spectral peak that walks up the harmonics.
+  const TBL_F = 32, TBL_N = 256;
+  const TABLE = [];
+  for (let f = 0; f < TBL_F; f++) {
+    const u = f / (TBL_F - 1);
+    const center = 1 + 23 * u * u;
+    const width = 0.8 + 3 * u;
+    const frame = new Float32Array(TBL_N);
+    let peak = 1e-9;
+    for (let i = 0; i < TBL_N; i++) {
+      const th = (TAU * i) / TBL_N;
+      let v = 0.6 * Math.sin(th);
+      for (let h = 2; h <= 32; h++) {
+        const a = Math.exp(-((h - center) * (h - center)) / (2 * width * width)) / Math.sqrt(h);
+        v += a * Math.sin(h * th + (h % 3) * 0.7 * u);
+      }
+      frame[i] = v;
+      peak = Math.max(peak, Math.abs(v));
+    }
+    for (let i = 0; i < TBL_N; i++) frame[i] /= peak;
+    TABLE.push(frame);
+  }
+
+  const FAMILIES = [
+    { id: "fm", name: "FM", sub: "Two operators at whole-number ratios, so every note stays in tune.", color: "--fam-fm" },
+    { id: "pd", name: "Phase distortion", sub: "A cosine read through a bent cycle, the way Casio CZ synths do it.", color: "--fam-pd" },
+    { id: "shape", name: "Folding and drive", sub: "A sine pushed through a shaper.", color: "--fam-shape" },
+    { id: "add", name: "Additive", sub: "Sums of harmonics. Anything above the audible limit is skipped, so these stay clean on high notes.", color: "--fam-add" },
+    { id: "form", name: "Formants and tables", sub: "Formants fixed in Hz, or stored frames scanned by Duty.", color: "--fam-form" },
+    { id: "dig", name: "Digital and grit", sub: "Bit logic, stepped noise and per-cycle randomness.", color: "--fam-dig" },
+    { id: "stock", name: "Stock, for comparison", sub: "The current firmware's math for Saw and Pulse.", color: "--fam-stock" },
+  ];
+
+  // Every oscillator: fn(p, d, dt, sr, r) -> sample. p = cycle position, d = duty 0..1,
+  // dt = cycles per sample, sr = sample rate, r = random number drawn once per cycle.
+  const TYPES = [
+    { id: "fm11", fam: "fm", name: "FM 1:1", pick: true, cost: "cheap",
+      desc: "Sine that grows into a buzzy brass bass as Duty rises.", duty: "FM depth",
+      recipe: "sin(θ + 7d²·sin θ)",
+      fn: (p, d) => Math.sin(TAU * p + 7 * d * d * Math.sin(TAU * p)) },
+    { id: "fm12", fam: "fm", name: "FM 1:2", cost: "cheap",
+      desc: "Hollow and reedy. Odd harmonics only, like a clarinet or a soft square.", duty: "FM depth",
+      recipe: "sin(θ + 5d²·sin 2θ)",
+      fn: (p, d) => Math.sin(TAU * p + 5 * d * d * Math.sin(2 * TAU * p)) },
+    { id: "fm17", fam: "fm", name: "FM 1:7", cost: "cheap",
+      desc: "Glassy and metallic. Becomes bells and tines once the SP's envelope shapes it.", duty: "FM depth",
+      recipe: "sin(θ + 2.5d²·sin 7θ)",
+      fn: (p, d) => Math.sin(TAU * p + 2.5 * d * d * Math.sin(7 * TAU * p)) },
+
+    { id: "czsaw", fam: "pd", name: "CZ Saw", cost: "cheap",
+      desc: "Sine bending into a saw. The classic CZ bass sweep.", duty: "Brightness",
+      recipe: "−cos 2π·bend(p), knee at 0.5 − 0.49d",
+      fn: (p, d) => {
+        const m = 0.5 - 0.49 * d;
+        const w = p < m ? (0.5 * p) / m : 0.5 + (0.5 * (p - m)) / (1 - m);
+        return -Math.cos(TAU * w);
+      } },
+    { id: "czsqr", fam: "pd", name: "CZ Sqr", cost: "cheap",
+      desc: "Sine squaring off into a soft-edged square.", duty: "Brightness",
+      recipe: "cos 2π·bend(p), two flat holds",
+      fn: (p, d) => {
+        const m = 0.5 - 0.48 * d;
+        const h = p < 0.5 ? p : p - 0.5;
+        const base = p < 0.5 ? 0 : 0.5;
+        return Math.cos(TAU * (base + 0.5 * Math.min(h / m, 1)));
+      } },
+    { id: "czres", fam: "pd", name: "CZ Res", pick: true, cost: "cheap",
+      desc: "Sounds like sweeping a resonant filter, with no filter in the chain.", duty: "Resonance pitch, 1× to 16×",
+      recipe: "(1 − p)·cos(2^(4d)·θ)",
+      fn: (p, d) => (1 - p) * Math.cos(TAU * Math.pow(2, 4 * d) * p) },
+    { id: "sync", fam: "pd", name: "Sync", cost: "cheap",
+      desc: "A second sine forced to restart every cycle. The classic sync-lead sweep.", duty: "Slave ratio, 1× to 8×",
+      recipe: "sin(2π·frac(2^(3d)·p))",
+      fn: (p, d) => Math.sin(TAU * frac(Math.pow(2, 3 * d) * p)) },
+
+    { id: "fold", fam: "shape", name: "Fold", pick: true, cost: "cheap",
+      desc: "West-coast wavefolder. Round bass that turns into ringing metal.", duty: "Fold depth",
+      recipe: "sin(π/2·(1 + 6d)·sin θ)",
+      fn: (p, d) => Math.sin(Math.PI * 0.5 * (1 + 6 * d) * Math.sin(TAU * p)) },
+    { id: "drive", fam: "shape", name: "Drive", cost: "cheap",
+      desc: "Overdriven sine with even harmonics. Warm, fuzzy 808-style bass.", duty: "Drive",
+      recipe: "tanh(g·(sin θ + 0.35)), g = 1 + 14d²",
+      fn: (p, d) => {
+        const g = 1 + 14 * d * d, b = 0.35;
+        const t0 = Math.tanh(g * b);
+        const y = Math.tanh(g * (Math.sin(TAU * p) + b)) - t0;
+        const n = Math.max(Math.tanh(g * (1 + b)) - t0, t0 - Math.tanh(g * (b - 1)));
+        return y / n;
+      } },
+
+    { id: "lpsaw", fam: "add", name: "LP Saw", pick: true, cost: "medium",
+      desc: "Saw through a resonant low-pass. Stays clean on high pads, unlike the stock Saw.", duty: "Cutoff",
+      recipe: "Σ sin(nθ)/n · H(n/nc), n below Nyquist",
+      fn: (p, d, dt) => lpBank(p, d, dt, false) },
+    { id: "lpsqr", fam: "add", name: "LP Sqr", cost: "medium",
+      desc: "Square through the same low-pass. Round, hollow bass.", duty: "Cutoff",
+      recipe: "same, odd n only",
+      fn: (p, d, dt) => lpBank(p, d, dt, true) },
+    { id: "organ", fam: "add", name: "Organ", cost: "medium",
+      desc: "Nine drawbars. The note on screen is the 16-foot bar.", duty: "Registration, flute to full",
+      recipe: "9 sines at 1, 2, 3, 4, 6, 8, 10, 12, 16×",
+      fn: (p, d, dt) => {
+        const pos = d * (ORG_REGS.length - 1);
+        const i = Math.min(ORG_REGS.length - 2, Math.floor(pos));
+        const t = pos - i;
+        let y = 0;
+        for (let j = 0; j < 9; j++) {
+          const h = ORG_H[j];
+          if (h * dt > 0.45) continue;
+          const g = ORG_REGS[i][j] * (1 - t) + ORG_REGS[i + 1][j] * t;
+          if (g > 0) y += g * Math.sin(TAU * h * p);
+        }
+        return y;
+      } },
+
+    { id: "vowel", fam: "form", name: "Vowel", pick: true, cost: "medium",
+      desc: "Talking bass. Three formants fixed in Hz, so vowels stay put as the note changes.", duty: "Vowel, A E I O U",
+      recipe: "3 decaying sines at F1–F3, restarted each cycle",
+      fn: (p, d, dt, sr) => {
+        const f = dt * sr;
+        const pos = d * 4;
+        const i = Math.min(3, Math.floor(pos));
+        const t = pos - i;
+        const tSec = p / f;
+        let y = 0.3 * Math.sin(TAU * p);
+        for (let k = 0; k < 3; k++) {
+          const F = VOW[i][k] * Math.pow(VOW[i + 1][k] / VOW[i][k], t);
+          if (F > 0.45 * sr) continue;
+          const env = Math.exp(-Math.PI * VBW[k] * tSec);
+          const att = Math.min(1, tSec * F * 2);
+          y += VAMP[k] * env * att * Math.sin(TAU * F * tSec);
+        }
+        return y;
+      } },
+    { id: "table", fam: "form", name: "Table", cost: "cheap",
+      desc: "32 stored frames. Custom tables could be baked in when the firmware is built.", duty: "Frame",
+      recipe: "32 × 256 table, bilinear read",
+      fn: (p, d) => {
+        const fpos = d * (TBL_F - 1);
+        const f0 = Math.floor(fpos), f1 = Math.min(f0 + 1, TBL_F - 1), ft = fpos - f0;
+        const x = p * TBL_N;
+        const i0 = Math.floor(x) % TBL_N, i1 = (i0 + 1) % TBL_N, xt = x - Math.floor(x);
+        const a = TABLE[f0][i0] * (1 - xt) + TABLE[f0][i1] * xt;
+        const b = TABLE[f1][i0] * (1 - xt) + TABLE[f1][i1] * xt;
+        return a * (1 - ft) + b * ft;
+      } },
+
+    { id: "logic", fam: "dig", name: "Logic", pick: true, cost: "cheap",
+      desc: "Two squares XORed, like the LOGIC OP wave on the SYSTEM-1.", duty: "Ratio, 2× to 9×",
+      recipe: "sq(p) XOR sq(k·p)",
+      fn: (p, d) => {
+        const k = 2 + Math.round(d * 7);
+        return ((frac(p) < 0.5) !== (frac(k * p) < 0.5)) ? 1 : -1;
+      } },
+    { id: "metal", fam: "dig", name: "Metal", cost: "cheap",
+      desc: "Random steps that repeat every cycle. Robot voices, chip hats, clangs.", duty: "Steps, 2 to 64",
+      recipe: "hash(⌊p·S⌋)",
+      fn: (p, d) => {
+        const s = 2 + Math.round(62 * d * d);
+        return hash11(Math.floor(p * s) * 7919 + s * 104729);
+      } },
+    { id: "grit", fam: "dig", name: "Grit", cost: "cheap",
+      desc: "Square whose width jumps every cycle, using the random number the SP already draws.", duty: "Jump size",
+      recipe: "sq(p, 0.5 + 0.45d·r)",
+      fn: (p, d, dt, sr, r) => {
+        const w = 0.5 + 0.45 * d * r;
+        const amp = 1 - 0.35 * d * Math.abs(r);
+        return (p < w ? 1 : -1) * amp;
+      } },
+
+    { id: "ssaw", fam: "stock", name: "Saw", cost: "stock",
+      desc: "Today's Saw. Play the top pads to hear it alias.", duty: "No effect",
+      recipe: "2p − 1",
+      fn: (p) => 2 * p - 1 },
+    { id: "spulse", fam: "stock", name: "Pulse", cost: "stock",
+      desc: "Today's Pulse. Duty sets the width.", duty: "Width",
+      recipe: "p ≤ d ? 1 : −1",
+      fn: (p, d) => (p <= d ? 1 : -1) },
+  ];
+  const BY_ID = Object.fromEntries(TYPES.map((t) => [t.id, t]));
+  const FAM_BY_ID = Object.fromEntries(FAMILIES.map((f) => [f.id, f]));
+  const css = getComputedStyle(document.documentElement);
+  const famColor = (famId) => css.getPropertyValue(FAM_BY_ID[famId].color).trim();
+
+  // ---------- state ----------
+  const S = {
+    type: "czres",
+    dutyTarget: 0.5, duty: 0.5,
+    level: 90 / 127,
+    sweep: false, sweepPhase: 0.25,
+    hold: false,
+    scale: "pentam", oct: 2,
+    note: 36, freq: 440 * Math.pow(2, (36 - 69) / 12),
+    gate: 0, amp: 0, p: 0, r: 0.3,
+    gain: 1, x1: 0, y1: 0,
+    activePad: null, downPads: [],
+  };
+  let dirty = true;
+
+  // ---------- audio ----------
+  let ac = null;
+  function startAudio() {
+    if (ac) { if (ac.state === "suspended") ac.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ac = new AC();
+    const node = ac.createScriptProcessor(1024, 1, 2);
+    node.onaudioprocess = render;
+    node.connect(ac.destination);
+  }
+
+  function render(e) {
+    const L = e.outputBuffer.getChannelData(0);
+    const R = e.outputBuffer.getChannelData(1);
+    const sr = ac.sampleRate;
+    const fn = BY_ID[S.type].fn;
+    const dt = S.freq / sr;
+    // Loudness match: RMS of one cycle at the current settings.
+    let acc = 0;
+    for (let i = 0; i < 128; i++) { const v = fn((i + 0.5) / 128, S.dutyTarget, dt, sr, S.r); acc += v * v; }
+    const gainTarget = 0.3 / Math.max(Math.sqrt(acc / 128), 0.08);
+    for (let i = 0; i < L.length; i++) {
+      S.duty += (S.dutyTarget - S.duty) * 0.003;
+      S.gain += (gainTarget - S.gain) * 0.002;
+      if (S.amp < S.gate) S.amp = Math.min(S.gate, S.amp + 1 / 200);
+      else if (S.amp > S.gate) S.amp = Math.max(S.gate, S.amp - 1 / 200);
+      let y = 0;
+      if (S.amp > 0) y = fn(S.p, S.duty, dt, sr, S.r) * S.gain * S.amp;
+      S.p += dt;
+      if (S.p >= 1) { S.p -= 1; S.r = Math.random() * 2 - 1; }
+      const hp = y - S.x1 + 0.9985 * S.y1;
+      S.x1 = y; S.y1 = hp;
+      const out = Math.tanh(hp * S.level * 1.3) * 0.55;
+      L[i] = out; R[i] = out;
+    }
+  }
+
+  // ---------- notes and pads ----------
+  const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const SCALES = { chrom: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], minor: [0, 2, 3, 5, 7, 8, 10], pentam: [0, 3, 5, 7, 10] };
+  const KEYS = ["1", "2", "3", "4", "q", "w", "e", "r", "a", "s", "d", "f", "z", "x", "c", "v"];
+  const noteName = (m) => NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+  function padNote(idx) {
+    const sc = SCALES[S.scale];
+    return 12 * (S.oct + 1) + sc[idx % sc.length] + 12 * Math.floor(idx / sc.length);
+  }
+  function setNote(m) { S.note = m; S.freq = 440 * Math.pow(2, (m - 69) / 12); dirty = true; }
+
+  const padsEl = document.getElementById("pads");
+  const padEls = [];
+  for (let i = 0; i < 16; i++) {
+    const row = Math.floor(i / 4), col = i % 4;
+    const idx = (3 - row) * 4 + col; // lowest notes on the bottom row
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pad";
+    b.dataset.idx = idx;
+    b.innerHTML = '<span class="k">' + KEYS[i] + '</span><span class="n"></span>';
+    b.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      if (b.setPointerCapture) { try { b.setPointerCapture(ev.pointerId); } catch (_) {} }
+      pressPad(idx);
+    });
+    const up = () => releasePad(idx);
+    b.addEventListener("pointerup", up);
+    b.addEventListener("pointercancel", up);
+    b.addEventListener("keydown", (ev) => { if ((ev.key === "Enter" || ev.key === " ") && !ev.repeat) { ev.preventDefault(); pressPad(idx); } });
+    b.addEventListener("keyup", (ev) => { if (ev.key === "Enter" || ev.key === " ") releasePad(idx); });
+    padsEl.appendChild(b);
+    padEls[idx] = b;
+  }
+  function renderPads() {
+    for (let idx = 0; idx < 16; idx++) {
+      const el = padEls[idx];
+      const m = padNote(idx);
+      el.querySelector(".n").textContent = noteName(m);
+      el.setAttribute("aria-label", "Pad, note " + noteName(m));
+      el.classList.toggle("on", S.activePad === idx && S.gate === 1);
+    }
+  }
+  function pressPad(idx) {
+    startAudio();
+    if (S.hold) {
+      if (S.activePad === idx && S.gate === 1) { S.gate = 0; S.activePad = null; }
+      else { setNote(padNote(idx)); S.gate = 1; S.activePad = idx; }
+    } else {
+      S.downPads = S.downPads.filter((x) => x !== idx).concat(idx);
+      setNote(padNote(idx));
+      S.gate = 1;
+      S.activePad = idx;
+    }
+    renderPads();
+    dirty = true;
+  }
+  function releasePad(idx) {
+    if (S.hold) return;
+    S.downPads = S.downPads.filter((x) => x !== idx);
+    if (S.activePad === idx) {
+      if (S.downPads.length) { const o = S.downPads[S.downPads.length - 1]; S.activePad = o; setNote(padNote(o)); }
+      else { S.gate = 0; S.activePad = null; }
+    }
+    renderPads();
+    dirty = true;
+  }
+
+  // ---------- controls ----------
+  const dutyEl = document.getElementById("duty");
+  const dutyOut = document.getElementById("dutyOut");
+  const levelEl = document.getElementById("level");
+  const levelOut = document.getElementById("levelOut");
+  const sweepBtn = document.getElementById("sweep");
+  const holdBtn = document.getElementById("hold");
+  const octOut = document.getElementById("octOut");
+  const faceplate = document.getElementById("faceplate");
+
+  function setDuty(v, fromUser) {
+    S.dutyTarget = Math.max(0, Math.min(1, v));
+    const pct = Math.round(S.dutyTarget * 100);
+    dutyEl.value = pct;
+    dutyEl.style.setProperty("--fill", pct + "%");
+    dutyOut.textContent = pct + "%";
+    if (fromUser && S.sweep) setSweep(false);
+    dirty = true;
+  }
+  function setSweep(on) {
+    S.sweep = on;
+    sweepBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) S.sweepPhase = S.dutyTarget / 2;
+    dirty = true;
+  }
+  dutyEl.addEventListener("input", () => setDuty(dutyEl.value / 100, true));
+  levelEl.addEventListener("input", () => {
+    S.level = levelEl.value / 127;
+    levelOut.textContent = levelEl.value;
+    levelEl.style.setProperty("--fill", (levelEl.value / 127) * 100 + "%");
+  });
+  levelEl.style.setProperty("--fill", (90 / 127) * 100 + "%");
+  sweepBtn.addEventListener("click", () => setSweep(!S.sweep));
+  holdBtn.addEventListener("click", () => {
+    S.hold = !S.hold;
+    holdBtn.setAttribute("aria-pressed", S.hold ? "true" : "false");
+    if (!S.hold) { S.gate = 0; S.activePad = null; S.downPads = []; }
+    renderPads();
+    dirty = true;
+  });
+  document.getElementById("scale").addEventListener("change", (ev) => { S.scale = ev.target.value; renderPads(); });
+  document.getElementById("octDown").addEventListener("click", () => { S.oct = Math.max(0, S.oct - 1); octOut.textContent = S.oct; renderPads(); });
+  document.getElementById("octUp").addEventListener("click", () => { S.oct = Math.min(6, S.oct + 1); octOut.textContent = S.oct; renderPads(); });
+
+  // ---------- type bank ----------
+  const familiesEl = document.getElementById("families");
+  const cardEls = {};
+  const thumbs = [];
+  for (const fam of FAMILIES) {
+    const sec = document.createElement("div");
+    sec.className = "family";
+    sec.style.setProperty("--fam", "var(" + fam.color + ")");
+    sec.innerHTML = '<h3><span class="led" aria-hidden="true"></span>' + fam.name + '<span class="sub">' + fam.sub + "</span></h3>";
+    const row = document.createElement("div");
+    row.className = "cards";
+    for (const t of TYPES.filter((x) => x.fam === fam.id)) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "card";
+      b.setAttribute("aria-pressed", "false");
+      const chips = (t.pick ? '<span class="chip pick">First batch</span>' : "") + '<span class="chip">' + t.cost + "</span>";
+      b.innerHTML =
+        '<span class="card-top"><span class="sp-name">' + t.name + '</span><span class="chips">' + chips + "</span></span>" +
+        '<canvas class="thumb" aria-hidden="true"></canvas>' +
+        '<span class="desc">' + t.desc + "</span>" +
+        '<span class="duty"><b>Duty</b>' + t.duty + "</span>" +
+        '<code class="recipe">' + t.recipe + "</code>";
+      b.addEventListener("click", () => setType(t.id));
+      row.appendChild(b);
+      cardEls[t.id] = b;
+      thumbs.push({ canvas: b.querySelector("canvas"), t, color: famColor(fam.id) });
+    }
+    sec.appendChild(row);
+    familiesEl.appendChild(sec);
+  }
+
+  function setType(id) {
+    S.type = id;
+    for (const k in cardEls) cardEls[k].setAttribute("aria-pressed", k === id ? "true" : "false");
+    faceplate.style.setProperty("--accent", "var(" + FAM_BY_ID[BY_ID[id].fam].color + ")");
+    dirty = true;
+  }
+  function stepType(dir) {
+    const i = TYPES.findIndex((t) => t.id === S.type);
+    setType(TYPES[(i + dir + TYPES.length) % TYPES.length].id);
+  }
+  document.getElementById("prevType").addEventListener("click", () => stepType(-1));
+  document.getElementById("nextType").addEventListener("click", () => stepType(1));
+
+  function drawThumb(th) {
+    const c = th.canvas;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = c.clientWidth || 240, h = c.clientHeight || 48;
+    c.width = Math.round(w * dpr);
+    c.height = Math.round(h * dpr);
+    const g = c.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.strokeStyle = "rgba(235,230,218,0.09)";
+    g.lineWidth = 1;
+    g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+    const n = 240, vals = [];
+    let peak = 1e-6;
+    for (let i = 0; i < n; i++) {
+      const v = th.t.fn(i / n, 0.5, 110 / 48000, 48000, 0.6);
+      vals.push(v);
+      peak = Math.max(peak, Math.abs(v));
+    }
+    g.strokeStyle = th.color;
+    g.lineWidth = 1.6;
+    g.lineJoin = "round";
+    g.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * w;
+      const y = h / 2 - (vals[i] / peak) * (h / 2 - 5);
+      if (i) g.lineTo(x, y); else g.moveTo(x, y);
+    }
+    g.stroke();
+  }
+  let resizeTimer = null;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => thumbs.forEach(drawThumb), 150); });
+
+  // ---------- OLED ----------
+  const oled = document.getElementById("oled");
+  const og = oled.getContext("2d");
+  let pixelFont = '8px "Courier New", monospace';
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('8px "Silkscreen"').then(() => { pixelFont = '8px "Silkscreen"'; dirty = true; }).catch(() => {});
+  }
+  function drawOLED() {
+    const t = BY_ID[S.type];
+    const sr = 48000, dt = S.freq / sr, d = S.dutyTarget;
+    og.fillStyle = "#000";
+    og.fillRect(0, 0, 128, 64);
+    og.fillStyle = "#fff";
+    og.font = pixelFont;
+    og.textBaseline = "top";
+    og.fillText(t.name, 1, 1);
+    const dutyTxt = "DUTY " + Math.round(d * 100);
+    og.fillText(dutyTxt, 127 - Math.ceil(og.measureText(dutyTxt).width), 1);
+    // two cycles of the wave
+    const vals = new Float32Array(128);
+    let peak = 1e-6;
+    for (let x = 0; x < 128; x++) {
+      const cyc = Math.floor(x / 64);
+      const v = t.fn(frac(x / 64), d, dt, sr, hash11(cyc + 17) * 0.9);
+      vals[x] = v;
+      peak = Math.max(peak, Math.abs(v));
+    }
+    for (let x = 0; x < 128; x += 4) og.fillRect(x, 25, 1, 1);
+    let prev = null;
+    for (let x = 0; x < 128; x++) {
+      const y = Math.round(25 - (vals[x] / peak) * 13);
+      if (prev === null) og.fillRect(x, y, 1, 1);
+      else { const y0 = Math.min(prev, y), y1 = Math.max(prev, y); og.fillRect(x, y0, 1, y1 - y0 + 1); }
+      prev = y;
+    }
+    // harmonics 1-32 of one cycle
+    const N = 256, cyc = new Float32Array(N);
+    for (let i = 0; i < N; i++) cyc[i] = t.fn(i / N, d, dt, sr, 0.5);
+    const mags = [];
+    let mmax = 1e-9;
+    for (let h = 1; h <= 32; h++) {
+      let re = 0, im = 0;
+      for (let i = 0; i < N; i++) { const a = (TAU * h * i) / N; re += cyc[i] * Math.cos(a); im += cyc[i] * Math.sin(a); }
+      const m = Math.sqrt(re * re + im * im);
+      mags.push(m);
+      mmax = Math.max(mmax, m);
+    }
+    for (let h = 0; h < 32; h++) {
+      const db = 20 * Math.log10(mags[h] / mmax + 1e-9);
+      const hgt = Math.round(Math.max(0, (db + 42) / 42) * 11);
+      if (hgt > 0) og.fillRect(h * 4 + 1, 54 - hgt, 3, hgt);
+    }
+    og.fillRect(0, 54, 128, 1);
+    const hz = noteName(S.note) + ":" + S.freq.toFixed(1) + "Hz";
+    og.fillText(hz, 1, 56);
+    const flags = (S.sweep ? "SWP " : "") + (S.hold ? "HOLD" : "");
+    if (flags) og.fillText(flags.trim(), 127 - Math.ceil(og.measureText(flags.trim()).width), 56);
+    // 1-bit OLED look
+    const img = og.getImageData(0, 0, 128, 64);
+    const px = img.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const on = px[i] > 110;
+      px[i] = on ? 220 : 4; px[i + 1] = on ? 238 : 5; px[i + 2] = on ? 255 : 6; px[i + 3] = 255;
+    }
+    og.putImageData(img, 0, 0);
+    oled.setAttribute("aria-label", "Screen: " + t.name + ", duty " + Math.round(d * 100) + " percent, " + hz);
+  }
+
+  // ---------- keyboard ----------
+  const keyToIdx = {};
+  KEYS.forEach((k, i) => { const row = Math.floor(i / 4), col = i % 4; keyToIdx[k] = (3 - row) * 4 + col; });
+  window.addEventListener("keydown", (ev) => {
+    const tag = (ev.target && ev.target.tagName) || "";
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    const k = ev.key.toLowerCase();
+    if (k in keyToIdx) { if (!ev.repeat) pressPad(keyToIdx[k]); ev.preventDefault(); return; }
+    if (ev.key === "ArrowRight") { stepType(1); ev.preventDefault(); }
+    if (ev.key === "ArrowLeft") { stepType(-1); ev.preventDefault(); }
+  });
+  window.addEventListener("keyup", (ev) => {
+    const k = ev.key.toLowerCase();
+    if (k in keyToIdx) releasePad(keyToIdx[k]);
+  });
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dtf = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (S.sweep) {
+      S.sweepPhase = (S.sweepPhase + dtf / 8) % 1;
+      const tri = S.sweepPhase < 0.5 ? S.sweepPhase * 2 : 2 - S.sweepPhase * 2;
+      setDuty(tri, false);
+    }
+    if (dirty) { drawOLED(); dirty = false; }
+    requestAnimationFrame(frame);
+  }
+
+  setType(S.type);
+  setDuty(0.5, false);
+  renderPads();
+  requestAnimationFrame(() => thumbs.forEach(drawThumb));
+  requestAnimationFrame(frame);
+
+  // Exposed for checking the oscillators from the console.
+  window.waveLab = { TYPES, BY_ID };
+})();
+</script>
