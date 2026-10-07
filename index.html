@@ -218,6 +218,7 @@ input[type="range"]:focus-visible { outline: 2px solid var(--legend); outline-of
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   position: relative;
   transition: background-color 0.07s, box-shadow 0.07s, color 0.07s;
 }
@@ -399,7 +400,7 @@ h2 {
 
     <div class="pads-col">
       <div class="pads" id="pads" role="group" aria-label="Pads"></div>
-      <p class="hint">Press a pad, or use keys 1&ndash;4, Q&ndash;R, A&ndash;F, Z&ndash;V. Arrow keys change type. Sound starts on your first press.</p>
+      <p class="hint">Press a pad, or use keys 1&ndash;4, Q&ndash;R, A&ndash;F, Z&ndash;V. Arrow keys change type. On a phone, your first tap switches the sound on.</p>
     </div>
   </section>
 
@@ -677,14 +678,19 @@ h2 {
   // ---------- audio ----------
   let ac = null;
   function startAudio() {
-    if (ac) { if (ac.state === "suspended") ac.resume(); return; }
+    if (ac) { if (ac.state !== "running") Promise.resolve(ac.resume()).catch(() => {}); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
+    // iPhone: keep playing with the ring/silent switch on silent, like a music app.
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
     ac = new AC();
     const node = ac.createScriptProcessor(1024, 1, 2);
     node.onaudioprocess = render;
     node.connect(ac.destination);
   }
+  // Phones only let sound start when a finger lifts, not when it lands,
+  // so every lift and click also switches the sound on.
+  for (const type of ["pointerup", "touchend", "click"]) window.addEventListener(type, startAudio, true);
 
   function render(e) {
     const L = e.outputBuffer.getChannelData(0);
@@ -741,6 +747,7 @@ h2 {
     const up = () => releasePad(idx);
     b.addEventListener("pointerup", up);
     b.addEventListener("pointercancel", up);
+    b.addEventListener("contextmenu", (ev) => ev.preventDefault()); // long press on a phone
     b.addEventListener("keydown", (ev) => { if ((ev.key === "Enter" || ev.key === " ") && !ev.repeat) { ev.preventDefault(); pressPad(idx); } });
     b.addEventListener("keyup", (ev) => { if (ev.key === "Enter" || ev.key === " ") releasePad(idx); });
     padsEl.appendChild(b);
