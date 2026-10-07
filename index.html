@@ -974,11 +974,13 @@ h2 {
   const keyToIdx = {};
   KEYS.forEach((k, i) => { const row = Math.floor(i / 4), col = i % 4; keyToIdx[k] = (3 - row) * 4 + col; });
   window.addEventListener("keydown", (ev) => {
-    const tag = (ev.target && ev.target.tagName) || "";
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
-    if (tag === "SELECT" || tag === "INPUT") return;
     const k = ev.key.toLowerCase();
+    // Pad keys play even while a slider or the scale menu has focus.
     if (k in keyToIdx) { if (!ev.repeat) pressPad(keyToIdx[k]); ev.preventDefault(); return; }
+    // A focused slider or menu keeps the arrow keys.
+    const tag = (ev.target && ev.target.tagName) || "";
+    if (tag === "SELECT" || tag === "INPUT") return;
     if (ev.key === "ArrowRight") { stepType(1); ev.preventDefault(); }
     if (ev.key === "ArrowLeft") { stepType(-1); ev.preventDefault(); }
   });
