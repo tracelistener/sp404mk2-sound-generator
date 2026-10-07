@@ -1,9 +1,11 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Type 15+ Wave Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
 <style>
-/* Layout: the instrument (OLED, controls, 4x4 pads) is one faceplate on top; the candidate types sit below as pad-coloured cards grouped by family; notes on SP behaviour close the page. */
+/* Layout: the instrument (OLED, controls, 4x4 pads) is one faceplate on top; the 17 types sit below as pad-coloured cards grouped by family, in SP order; notes on SP behaviour close the page. */
 :root {
   color-scheme: dark;
   --ground: #141517;
@@ -65,6 +67,13 @@ h1 {
   text-wrap: balance;
 }
 .lede { margin: 0; max-width: 64ch; color: var(--legend-dim); }
+a { color: var(--legend); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
+.get { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 8px; }
+.get p { margin: 0; flex: 1 1 32ch; max-width: 62ch; font-size: 14px; color: var(--legend-dim); }
+a.key, .nowrap { white-space: nowrap; }
+a.key { text-decoration: none; }
+a.key:hover { color: var(--legend); border-color: var(--accent); }
 
 /* Faceplate */
 .faceplate {
@@ -297,7 +306,6 @@ h2 {
   color: var(--legend-dim);
   white-space: nowrap;
 }
-.chip.pick { border-color: var(--fam); color: var(--fam); }
 .thumb { display: block; width: 100%; height: 48px; background: var(--ground); border-radius: 6px; }
 .desc { display: block; font-size: 14px; line-height: 1.45; }
 .duty { display: block; font-size: 13px; color: var(--legend-dim); }
@@ -333,9 +341,13 @@ h2 {
 
 <div class="wrap">
   <header class="masthead">
-    <p class="eyebrow">SP-404MKII · Sound Generator · types after Noise2</p>
+    <p class="eyebrow">SP-404MKII · Sound Generator · <span class="nowrap">types 15–31</span></p>
     <h1>Type 15+ Wave Lab</h1>
-    <p class="lede">Seventeen candidate waveforms for the Sound Generator. Each one needs only the cycle position and the Duty knob, so it could slot in after the 15 stock types without new memory. Play them here before any firmware gets written.</p>
+    <p class="lede">The 17 waves the DOOM OS fork adds to the Sound Generator. On the SP they come after Noise2 as types 15 to 31, and Duty is the tone control on each one. The wave math here matches the SP's.</p>
+    <div class="get">
+      <a class="key" href="https://tracelistener.github.io/doom-os-etc./">Open the patcher &#9654;</a>
+      <p>Load stock 5.52 APP1 and select Sound Generator (4 voices + 17 new waves). Pair the result with the stock APP0. Experimental, so back up first and keep Roland's update for rollback.</p>
+    </div>
   </header>
 
   <section class="faceplate" id="faceplate" aria-label="Instrument">
@@ -393,24 +405,25 @@ h2 {
 
   <section class="bank" aria-labelledby="bankTitle">
     <div class="bank-head">
-      <h2 id="bankTitle">Candidate types</h2>
-      <p>Click a card to load it into the screen. Six are marked First batch: the widest spread of new sounds for a first build.</p>
+      <h2 id="bankTitle">The 17 types</h2>
+      <p>Cards run in SP order, from FM1:1 (type 15) to Grit (type 31), with the names the SP shows. Click one to load it into the screen.</p>
       <p class="keyline">p = cycle position 0&ndash;1 &nbsp;·&nbsp; &theta; = 2&pi;p &nbsp;·&nbsp; d = Duty 0&ndash;1 &nbsp;·&nbsp; r = random number drawn once per cycle</p>
     </div>
     <div id="families" class="bank"></div>
   </section>
 
   <section class="notes" aria-labelledby="notesTitle">
-    <h2 id="notesTitle">How these would behave on the SP</h2>
+    <h2 id="notesTitle">On the SP</h2>
     <ul>
-      <li><strong>One voice.</strong> The stock generator is mono, and these stay mono.</li>
+      <li><strong>Four voices.</strong> With the fork's Sound Generator option the SP plays up to four notes at once, all on the same controls. This page plays one.</li>
+      <li><strong>Duty moves in whole steps.</strong> On the SP, Duty is a number from 0 to 100 and each step takes effect immediately, so turning the knob adds some crunch. That's on purpose. This page glides between values.</li>
       <li><strong>Tone only moves by hand.</strong> Nothing modulates Duty, so sweeps are performed. Catch one live with skip-back (MARK), or export a still tone with REC and shape it with the SP's own envelope and effects.</li>
-      <li><strong>Pitch comes for free.</strong> Every type reads the same cycle position the stock types use. LP Saw, LP Sqr, Organ and Vowel also read the note, to skip harmonics above Nyquist or keep formants fixed in Hz.</li>
-      <li><strong>Loudness is matched on this page</strong> so you compare tone, not level. On the SP each type would get a fixed gain.</li>
-      <li><strong>Cost.</strong> Cheap types take one to three sine calls per sample. Medium types sum up to 64 harmonics. Both should fit, but the medium ones are the first to test for dropouts.</li>
-      <li><strong>Grit still needs no new memory.</strong> It reads the random number the stock code already draws at the start of every cycle.</li>
+      <li><strong>Pitch comes for free.</strong> Every type reads the same cycle position the stock types use. LPSaw, LPSqr and Organ also read the note to skip harmonics above Nyquist, and Vowel reads it to keep formants fixed in Hz. The others alias on high notes, like the stock Saw.</li>
+      <li><strong>Loudness.</strong> This page matches loudness so you compare tone, not level. The SP does it with a fixed table that sets every type and Duty step to roughly the level of the stock Sine.</li>
+      <li><strong>CPU.</strong> The first build froze the SP because LPSaw and LPSqr were too heavy for four voices. The current build reads the heavy math from tables made for each Duty step.</li>
+      <li><strong>Grit needs no new memory.</strong> It reads the random number the stock code already draws at the start of every cycle.</li>
     </ul>
-    <p class="foot">Based on a trace of firmware 5.52: the generator is a one-voice oscillator in the ARM app, and new types would hook in where types above 14 currently fall silent. The math on this page runs in your browser and nothing here talks to the SP.</p>
+    <p class="foot">Built from a trace of firmware 5.52. The new types hook in where stock types above 14 fall silent. Firmware patches and source are in <a href="https://github.com/tracelistener/doom-os-etc.">the DOOM OS fork</a>. This page runs in your browser and never talks to the SP. Not affiliated with Roland.</p>
   </section>
 </div>
 
@@ -491,26 +504,27 @@ h2 {
     { id: "add", name: "Additive", sub: "Sums of harmonics. Anything above the audible limit is skipped, so these stay clean on high notes.", color: "--fam-add" },
     { id: "form", name: "Formants and tables", sub: "Formants fixed in Hz, or stored frames scanned by Duty.", color: "--fam-form" },
     { id: "dig", name: "Digital and grit", sub: "Bit logic, stepped noise and per-cycle randomness.", color: "--fam-dig" },
-    { id: "stock", name: "Stock, for comparison", sub: "The current firmware's math for Saw and Pulse.", color: "--fam-stock" },
+    { id: "stock", name: "Stock, for comparison", sub: "Roland's own math for Saw and Pulse.", color: "--fam-stock" },
   ];
 
   // Every oscillator: fn(p, d, dt, sr, r) -> sample. p = cycle position, d = duty 0..1,
   // dt = cycles per sample, sr = sample rate, r = random number drawn once per cycle.
+  // name = the SP's on-screen name, num = its TYPE number. The new types stay in SP order.
   const TYPES = [
-    { id: "fm11", fam: "fm", name: "FM 1:1", pick: true, cost: "cheap",
+    { id: "fm11", fam: "fm", name: "FM1:1", num: 15,
       desc: "Sine that grows into a buzzy brass bass as Duty rises.", duty: "FM depth",
       recipe: "sin(θ + 7d²·sin θ)",
       fn: (p, d) => Math.sin(TAU * p + 7 * d * d * Math.sin(TAU * p)) },
-    { id: "fm12", fam: "fm", name: "FM 1:2", cost: "cheap",
+    { id: "fm12", fam: "fm", name: "FM1:2", num: 16,
       desc: "Hollow and reedy. Odd harmonics only, like a clarinet or a soft square.", duty: "FM depth",
       recipe: "sin(θ + 5d²·sin 2θ)",
       fn: (p, d) => Math.sin(TAU * p + 5 * d * d * Math.sin(2 * TAU * p)) },
-    { id: "fm17", fam: "fm", name: "FM 1:7", cost: "cheap",
+    { id: "fm17", fam: "fm", name: "FM1:7", num: 17,
       desc: "Glassy and metallic. Becomes bells and tines once the SP's envelope shapes it.", duty: "FM depth",
       recipe: "sin(θ + 2.5d²·sin 7θ)",
       fn: (p, d) => Math.sin(TAU * p + 2.5 * d * d * Math.sin(7 * TAU * p)) },
 
-    { id: "czsaw", fam: "pd", name: "CZ Saw", cost: "cheap",
+    { id: "czsaw", fam: "pd", name: "CZSaw", num: 18,
       desc: "Sine bending into a saw. The classic CZ bass sweep.", duty: "Brightness",
       recipe: "−cos 2π·bend(p), knee at 0.5 − 0.49d",
       fn: (p, d) => {
@@ -518,7 +532,7 @@ h2 {
         const w = p < m ? (0.5 * p) / m : 0.5 + (0.5 * (p - m)) / (1 - m);
         return -Math.cos(TAU * w);
       } },
-    { id: "czsqr", fam: "pd", name: "CZ Sqr", cost: "cheap",
+    { id: "czsqr", fam: "pd", name: "CZSqr", num: 19,
       desc: "Sine squaring off into a soft-edged square.", duty: "Brightness",
       recipe: "cos 2π·bend(p), two flat holds",
       fn: (p, d) => {
@@ -527,20 +541,20 @@ h2 {
         const base = p < 0.5 ? 0 : 0.5;
         return Math.cos(TAU * (base + 0.5 * Math.min(h / m, 1)));
       } },
-    { id: "czres", fam: "pd", name: "CZ Res", pick: true, cost: "cheap",
+    { id: "czres", fam: "pd", name: "CZRes", num: 20,
       desc: "Sounds like sweeping a resonant filter, with no filter in the chain.", duty: "Resonance pitch, 1× to 16×",
       recipe: "(1 − p)·cos(2^(4d)·θ)",
       fn: (p, d) => (1 - p) * Math.cos(TAU * Math.pow(2, 4 * d) * p) },
-    { id: "sync", fam: "pd", name: "Sync", cost: "cheap",
+    { id: "sync", fam: "pd", name: "Sync", num: 21,
       desc: "A second sine forced to restart every cycle. The classic sync-lead sweep.", duty: "Slave ratio, 1× to 8×",
       recipe: "sin(2π·frac(2^(3d)·p))",
       fn: (p, d) => Math.sin(TAU * frac(Math.pow(2, 3 * d) * p)) },
 
-    { id: "fold", fam: "shape", name: "Fold", pick: true, cost: "cheap",
+    { id: "fold", fam: "shape", name: "Fold", num: 22,
       desc: "West-coast wavefolder. Round bass that turns into ringing metal.", duty: "Fold depth",
       recipe: "sin(π/2·(1 + 6d)·sin θ)",
       fn: (p, d) => Math.sin(Math.PI * 0.5 * (1 + 6 * d) * Math.sin(TAU * p)) },
-    { id: "drive", fam: "shape", name: "Drive", cost: "cheap",
+    { id: "drive", fam: "shape", name: "Drive", num: 23,
       desc: "Overdriven sine with even harmonics. Warm, fuzzy 808-style bass.", duty: "Drive",
       recipe: "tanh(g·(sin θ + 0.35)), g = 1 + 14d²",
       fn: (p, d) => {
@@ -551,15 +565,15 @@ h2 {
         return y / n;
       } },
 
-    { id: "lpsaw", fam: "add", name: "LP Saw", pick: true, cost: "medium",
+    { id: "lpsaw", fam: "add", name: "LPSaw", num: 24,
       desc: "Saw through a resonant low-pass. Stays clean on high pads, unlike the stock Saw.", duty: "Cutoff",
       recipe: "Σ sin(nθ)/n · H(n/nc), n below Nyquist",
       fn: (p, d, dt) => lpBank(p, d, dt, false) },
-    { id: "lpsqr", fam: "add", name: "LP Sqr", cost: "medium",
+    { id: "lpsqr", fam: "add", name: "LPSqr", num: 25,
       desc: "Square through the same low-pass. Round, hollow bass.", duty: "Cutoff",
       recipe: "same, odd n only",
       fn: (p, d, dt) => lpBank(p, d, dt, true) },
-    { id: "organ", fam: "add", name: "Organ", cost: "medium",
+    { id: "organ", fam: "add", name: "Organ", num: 26,
       desc: "Nine drawbars. The note on screen is the 16-foot bar.", duty: "Registration, flute to full",
       recipe: "9 sines at 1, 2, 3, 4, 6, 8, 10, 12, 16×",
       fn: (p, d, dt) => {
@@ -576,7 +590,7 @@ h2 {
         return y;
       } },
 
-    { id: "vowel", fam: "form", name: "Vowel", pick: true, cost: "medium",
+    { id: "vowel", fam: "form", name: "Vowel", num: 27,
       desc: "Talking bass. Three formants fixed in Hz, so vowels stay put as the note changes.", duty: "Vowel, A E I O U",
       recipe: "3 decaying sines at F1–F3, restarted each cycle",
       fn: (p, d, dt, sr) => {
@@ -595,8 +609,8 @@ h2 {
         }
         return y;
       } },
-    { id: "table", fam: "form", name: "Table", cost: "cheap",
-      desc: "32 stored frames. Custom tables could be baked in when the firmware is built.", duty: "Frame",
+    { id: "table", fam: "form", name: "Table", num: 28,
+      desc: "32 stored frames, the same ones built into the SP.", duty: "Frame",
       recipe: "32 × 256 table, bilinear read",
       fn: (p, d) => {
         const fpos = d * (TBL_F - 1);
@@ -608,21 +622,21 @@ h2 {
         return a * (1 - ft) + b * ft;
       } },
 
-    { id: "logic", fam: "dig", name: "Logic", pick: true, cost: "cheap",
+    { id: "logic", fam: "dig", name: "Logic", num: 29,
       desc: "Two squares XORed, like the LOGIC OP wave on the SYSTEM-1.", duty: "Ratio, 2× to 9×",
       recipe: "sq(p) XOR sq(k·p)",
       fn: (p, d) => {
         const k = 2 + Math.round(d * 7);
         return ((frac(p) < 0.5) !== (frac(k * p) < 0.5)) ? 1 : -1;
       } },
-    { id: "metal", fam: "dig", name: "Metal", cost: "cheap",
+    { id: "metal", fam: "dig", name: "Metal", num: 30,
       desc: "Random steps that repeat every cycle. Robot voices, chip hats, clangs.", duty: "Steps, 2 to 64",
       recipe: "hash(⌊p·S⌋)",
       fn: (p, d) => {
         const s = 2 + Math.round(62 * d * d);
         return hash11(Math.floor(p * s) * 7919 + s * 104729);
       } },
-    { id: "grit", fam: "dig", name: "Grit", cost: "cheap",
+    { id: "grit", fam: "dig", name: "Grit", num: 31,
       desc: "Square whose width jumps every cycle, using the random number the SP already draws.", duty: "Jump size",
       recipe: "sq(p, 0.5 + 0.45d·r)",
       fn: (p, d, dt, sr, r) => {
@@ -631,12 +645,12 @@ h2 {
         return (p < w ? 1 : -1) * amp;
       } },
 
-    { id: "ssaw", fam: "stock", name: "Saw", cost: "stock",
-      desc: "Today's Saw. Play the top pads to hear it alias.", duty: "No effect",
+    { id: "ssaw", fam: "stock", name: "Saw", num: 6,
+      desc: "The stock Saw. Play the top pads to hear it alias.", duty: "No effect",
       recipe: "2p − 1",
       fn: (p) => 2 * p - 1 },
-    { id: "spulse", fam: "stock", name: "Pulse", cost: "stock",
-      desc: "Today's Pulse. Duty sets the width.", duty: "Width",
+    { id: "spulse", fam: "stock", name: "Pulse", num: 11,
+      desc: "The stock Pulse. Duty sets the width.", duty: "Width",
       recipe: "p ≤ d ? 1 : −1",
       fn: (p, d) => (p <= d ? 1 : -1) },
   ];
@@ -826,7 +840,7 @@ h2 {
       b.type = "button";
       b.className = "card";
       b.setAttribute("aria-pressed", "false");
-      const chips = (t.pick ? '<span class="chip pick">First batch</span>' : "") + '<span class="chip">' + t.cost + "</span>";
+      const chips = '<span class="chip">Type ' + t.num + "</span>";
       b.innerHTML =
         '<span class="card-top"><span class="sp-name">' + t.name + '</span><span class="chips">' + chips + "</span></span>" +
         '<canvas class="thumb" aria-hidden="true"></canvas>' +
